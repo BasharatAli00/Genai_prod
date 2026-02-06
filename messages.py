@@ -25,4 +25,3 @@ while True:
     # Print and save AI response to history
     print(f"AI: {response.content}")
     messages.append(response)
-    print(messages)
