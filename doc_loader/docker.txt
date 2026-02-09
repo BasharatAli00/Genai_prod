@@ -1,0 +1,19 @@
+--- DOCKER OVERVIEW ---
+
+Docker is an open-source platform that automates the deployment, scaling, and 
+management of applications using containerization.
+
+Key Concepts:
+1. Containers: Lightweight, standalone, executable packages that include 
+   everything needed to run an application (code, runtime, system tools, libraries).
+2. Images: Read-only templates used to create containers.
+3. Dockerfile: A text document containing all the commands a user could call 
+   on the command line to assemble an image.
+4. Docker Hub: A cloud-based repository where users can link, store, and 
+   share their Docker images.
+
+Why Use Docker?
+- Consistency: Works the same on your laptop as it does in production.
+- Efficiency: Containers share the host system's kernel, making them much 
+  faster and smaller than Virtual Machines (VMs).
+- Isolation: Applications run in their own environments, preventing conflicts.
