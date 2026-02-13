@@ -1,18 +1,16 @@
-from sentence_transformers import SentenceTransformer, util
-import os
+from langchain_classic.retrievers import MultiQueryRetriever
+from langchain_community.vectorstores import FAISS
+from langchain_deepseek import ChatDeepSeek
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
 from langchain_core.documents import Document
-
-from sentence_transformers import SentenceTransformer, util
+from dotenv import load_dotenv
 import os
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
-from langchain_core.documents import Document
-
+load_dotenv()
 
 # 1. Initialize the model
 
+
+model=ChatDeepSeek(model_name="deepseek-chat",api_key=os.getenv("DEEPSEEK_API_KEY"))
 
 # 2. Your 'Database' (Corpus)
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
@@ -47,37 +45,27 @@ doc5 = Document(
     metadata={"source": "biography", "topic": "history", "person": "Muhammad Ali Jinnah", "period": "Founding"}
 )
 
-docs = [doc1, doc2, doc3, doc4, doc5]
+doc6=Document(
+    page_content="imran khan is a Pakistani politician who served as the 22nd Prime Minister of Pakistan from August 2018 to April 2022. He is the founder of Pakistan Tehreek-e-Insaf (PTI), a political party he established in 1996. Before entering politics, Khan was a world-renowned cricketer who led Pakistan to victory in the 1992 Cricket World Cup. He is widely regarded as one of the greatest all-rounders in the history of cricket. Khan's political career has been marked by his anti-corruption stance and his promise to create a welfare state based on Islamic principles. He has also been a vocal critic of Western foreign policy and has advocated for a more independent foreign policy for Pakistan. Despite facing numerous challenges, including legal battles and political opposition, Khan remains a popular figure in Pakistan, particularly among the youth and overseas Pakistanis.   ",
+    metadata={"source": "biography", "topic": "history", "person": "imran khan", "period": "Founding"}
+)
 
-vectorstore = Chroma(
-    embedding_function=embeddings,
-    persist_directory="./.chroma_db",
-    collection_name="politicians"
+docs = [doc1, doc2, doc3, doc4, doc5,doc6]
+
+vectorstore = FAISS.from_documents(
+    documents=docs,
+    embedding=embeddings,
 )
 
 
-# Check if the store is empty
-if vectorstore._collection.count() == 0:
-    print("Database is empty. Adding documents...")
-    vectorstore.add_documents(docs)
-else:
-    print(f"Database already has {vectorstore._collection.count()} documents.")
 
-# 2. NOW GET WILL SHOW THE 5 IDs
-data = vectorstore.get(include=["embeddings","documents","metadatas"])
-print(f"Total IDs found: {len(data['ids'])}")
-
-
-
-# query="who is the founder of pakistan?"
-
-# # results=vectorstore.similarity_search(query,k=1)
-# # print(results[0].page_content)
-# # print(results[0].metadata)
-# result=vectorstore.similarity_search_with_score(query="",
-# filter={"person":"Muhammad Ali Jinnah"},
-# k=1)
-# print(result)
-retriver=vectorstore.as_retriever(search_kwargs={"k":1})
-result=retriver.invoke("who is cricket captain of pakistan?")
-print(result)
+mmr=vectorstore.as_retriever(
+    search_type="mmr",
+    search_kwargs={"k":3},
+    lambda_mult=0.5
+)
+for i , doc in enumerate(mmr.invoke("who is the founder pti?")):
+    print(f"Document {i+1}")
+    print(doc.page_content)
+    print(doc.metadata)
+    print("\n")

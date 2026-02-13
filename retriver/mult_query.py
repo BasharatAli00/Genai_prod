@@ -1,18 +1,16 @@
-from sentence_transformers import SentenceTransformer, util
-import os
+from langchain_classic.retrievers import MultiQueryRetriever
+from langchain_community.vectorstores import FAISS
+from langchain_deepseek import ChatDeepSeek
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
 from langchain_core.documents import Document
-
-from sentence_transformers import SentenceTransformer, util
+from dotenv import load_dotenv
 import os
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
-from langchain_core.documents import Document
-
+load_dotenv()
 
 # 1. Initialize the model
 
+
+model=ChatDeepSeek(model_name="deepseek-chat",api_key=os.getenv("DEEPSEEK_API_KEY"))
 
 # 2. Your 'Database' (Corpus)
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
@@ -49,8 +47,9 @@ doc5 = Document(
 
 docs = [doc1, doc2, doc3, doc4, doc5]
 
-vectorstore = Chroma(
-    embedding_function=embeddings,
+vectorstore = FAISS.from_documents(
+    documents=docs,
+    embedding=embeddings,
     persist_directory="./.chroma_db",
     collection_name="politicians"
 )
@@ -63,21 +62,9 @@ if vectorstore._collection.count() == 0:
 else:
     print(f"Database already has {vectorstore._collection.count()} documents.")
 
-# 2. NOW GET WILL SHOW THE 5 IDs
-data = vectorstore.get(include=["embeddings","documents","metadatas"])
-print(f"Total IDs found: {len(data['ids'])}")
-
-
-
-# query="who is the founder of pakistan?"
-
-# # results=vectorstore.similarity_search(query,k=1)
-# # print(results[0].page_content)
-# # print(results[0].metadata)
-# result=vectorstore.similarity_search_with_score(query="",
-# filter={"person":"Muhammad Ali Jinnah"},
-# k=1)
-# print(result)
-retriver=vectorstore.as_retriever(search_kwargs={"k":1})
-result=retriver.invoke("who is cricket captain of pakistan?")
-print(result)
+multi_query_retriever=MultiQueryRetriever.from_llm(
+    retriever=vectorstore.as_retriever(search_kwargs={"k":1}),
+    llm=model,
+ 
+)
+multi_query_retriever.invoke("who is 1992 guy?")
