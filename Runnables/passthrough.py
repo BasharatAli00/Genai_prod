@@ -1,5 +1,4 @@
 from langchain_core.prompts import PromptTemplate
-from langchain_deepseek import ChatDeepSeek
 from langchain_core.output_parsers import StrOutputParser
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langchain_core.runnables import RunnableParallel, RunnableBranch
